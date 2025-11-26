@@ -1,3 +1,6 @@
+
+import { runShader } from './shader.js';
+
 async function runPerformance(device, workgroupX, workgroupY, workgroupZ, dispatchX, dispatchY, dispatchZ, setDuration) {
     // 15625*64 = 1,000,000 (1M)
     let wgs = [workgroupX, workgroupY, workgroupZ];
@@ -16,7 +19,7 @@ async function runPerformance(device, workgroupX, workgroupY, workgroupZ, dispat
 
     while (Date.now() - startTime < duration) {
         try {
-            const time = await tempMaxShader(wgs[0], wgs[1], wgs[2], dwg[0], dwg[1], dwg[2]);
+            const time = await runShader(wgs[0], wgs[1], wgs[2], dwg[0], dwg[1], dwg[2]);
             if (time == null) {
                 break;
             }
