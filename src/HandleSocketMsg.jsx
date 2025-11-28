@@ -1,22 +1,13 @@
 import { useEffect } from 'react'
-import { io } from 'socket.io-client';
-import { getPeerID } from './PeerID.jsx';
 import { startMining } from './Mining.jsx';
 
-export function initSocket(socketRef) {
-    var jobParams = [];
-    var extraNonce1;
-    var difficulty;
-
-    let peerID = getPeerID();
+// Converted to a proper custom hook so React hooks are used from component render
+export function useHandleSocketMsg(socket) {
 
     useEffect(() => {
-        socketRef.current = io("https://rockthepeople.store", { query: { peerID } });
-        const socket = socketRef.current;
+        if (!socket) return;
 
-        console.log(peerID);
-
-        socket.on('message', async (res) => {
+        const messageHandler = async (res) => {
             switch (res.method) {
                 case 'mining.notify':
                     jobParams = res.params;
@@ -27,7 +18,7 @@ export function initSocket(socketRef) {
                     }
                     break;
                 case 'mining.extraNonceAndDiff':
-                    extraNonce1 = res.resuilt[1];
+                    setEN1(res.result[1]);
                     difficulty = res.result[0][0][1]
                     break;
                 case 'mining.authorizationConfirm':
@@ -50,14 +41,21 @@ export function initSocket(socketRef) {
                 case 'mining.set_difficulty': break;
                 default: break;
             }
-            socket.on('difficultyUpdate', (msg) => {
-                console.log(msg);
-            })
-        });
+        };
+
+        const difficultyHandler = (msg) => {
+            console.log(msg);
+        }
+
+        socket.on('message', messageHandler);
+        socket.on('difficultyUpdate', difficultyHandler);
 
         return () => {
-            socket.disconnect();
+            // remove handlers and disconnect socket on cleanup
+            socket.off('message', messageHandler);
+            socket.off('difficultyUpdate', difficultyHandler);
+            try { socket.disconnect(); } catch (e) { /* ignore */ }
         };
-    }, []);
+    }, [socket]);
 
 }

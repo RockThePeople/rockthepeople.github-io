@@ -13,5 +13,4 @@ export function sendSocketMsg(socket, method, params = []) {
     } catch (error) {
         console.error(`Failed to send socket message ${method}:`, error);
     }
-    
 }
